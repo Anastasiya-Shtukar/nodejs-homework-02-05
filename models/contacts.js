@@ -34,12 +34,14 @@ const removeContact = async (contactId) => {
   }
 };
 
-const addContact = async (body) => {
+const addContact = async (name, email, phone) => {
   try {
     const contacts = await listContacts();
     const newContact = {
       id: Date.now().toString(),
-      ...body,
+      name,
+      email,
+      phone,
     };
 
     contacts.push(newContact);
@@ -50,7 +52,7 @@ const addContact = async (body) => {
   }
 };
 
-const updateContact = async (contactId, body) => {
+const updateContact = async (contactId, name, email, phone) => {
   const contacts = await listContacts();
 
   const contactIndex = contacts.findIndex(
@@ -61,7 +63,7 @@ const updateContact = async (contactId, body) => {
     return { message: "Contact not found" };
   }
 
-  contacts[contactIndex] = { ...contacts[contactIndex], ...body };
+  contacts[contactIndex] = { ...contacts[contactIndex], name, email, phone };
 
   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 
