@@ -29,19 +29,21 @@ router.get("/", async (_req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   const { id } = req.params;
   const contact = await getContactById(id);
-  res.status(200).json(contact);
   if (!contact) {
     return res.status(404).json({ message: "not found" });
+  } else {
+    res.status(200).json(contact);
   }
 });
 
 router.post("/", async (req, res, next) => {
   try {
+    const { name, email, phone } = req.body;
     const { error } = contactSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
-    const newContact = await addContact(req.body);
+    const newContact = await addContact(name, email, phone);
     res.status(201).json(newContact);
   } catch (error) {
     next(error);
