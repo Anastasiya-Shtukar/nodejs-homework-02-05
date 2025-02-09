@@ -9,6 +9,9 @@ const {
   updateStatusContact,
 } = require("../../models/contacts");
 const Joi = require("joi");
+const auth = require("../../models/auth.js");
+
+router.use(auth);
 
 const contactSchema = Joi.object({
   name: Joi.string().min(3).max(50).required(),

@@ -30,10 +30,9 @@ router.post("/signup", async (req, res) => {
       return res.status(409).json({ message: "Email in use" });
     }
 
-    const hashedPswd = await bcrypt.hash(password, 10);
     const newUser = new User({
       email,
-      password: hashedPswd,
+      password,
       subscription: "starter",
     });
 
