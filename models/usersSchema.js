@@ -29,7 +29,7 @@ const userSchema = new Schema({
   },
   verificationToken: {
     type: String,
-    required: [true, "Verify token is required"],
+    default: null,
   },
 });
 
@@ -51,4 +51,4 @@ userSchema.methods.isValidPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema, "contacts");
+module.exports = mongoose.model("User", userSchema, "users");

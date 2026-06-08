@@ -1,59 +1,50 @@
 const mongoose = require("mongoose");
 const Contact = require("./contactsSchema.js");
-const connectDB = require("../config/connectDB.js");
 
-connectDB();
-
-const listContacts = async () => {
+const listContacts = async (owner) => {
   try {
-    return await Contact.find();
+    return await Contact.find({ owner });
   } catch (error) {
     console.error(error.message);
   }
 };
 
-const getContactById = async (contactId) => {
+const getContactById = async (contactId, owner) => {
   try {
-    return await Contact.findOne({ _id: contactId });
+    return await Contact.findOne({ _id: contactId, owner });
   } catch (error) {
     console.error(error.message);
   }
 };
 
-const removeContact = async (contactId) => {
+const removeContact = async (contactId, owner) => {
   try {
-    return await Contact.findByIdAndDelete({ _id: contactId });
+    return await Contact.findOneAndDelete({ _id: contactId, owner });
   } catch (error) {
     console.error(error.message);
   }
 };
 
-const addContact = async ({ name, email, phone, favorite }) => {
+const addContact = async (data) => {
   try {
-    const newContact = new Contact(name, email, phone, favorite);
-    await newContact.save();
-    return newContact;
+    return await Contact.create(data);
   } catch (error) {
     console.error(error.message);
   }
 };
 
-const updateContact = async (contactId, name, email, phone, favorite) => {
-  return await Contact.findByIdAndUpdate(
-    { _id: contactId },
-    name,
-    email,
-    phone,
-    favorite,
-    { new: true }
-  );
+const updateContact = async (contactId, data, favorite, owner) => {
+  return await Contact.findByIdAndUpdate({ _id: contactId, owner }, data, {
+    new: true,
+    runValidators: true,
+  });
 };
 
-const updateStatusContact = async (contactId, { favorite }) => {
-  return await Contact.findByIdAndUpdate(
-    contactId,
+const updateStatusContact = async (contactId, favorite, owner) => {
+  return await Contact.findOneAndUpdate(
+    { _id: contactId, owner },
     { favorite },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 };
 
