@@ -2,13 +2,15 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/usersSchema.js");
 
 const auth = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const { authorization = "" } = req.headers;
 
-  if (!token) {
+  if (!authorization?.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Not authorized" });
   }
 
-  if (!req.headers.authorization?.startsWith("Bearer ")) {
+  const token = authorization.split(" ")[1];
+
+  if (!token) {
     return res.status(401).json({ message: "Not authorized" });
   }
 

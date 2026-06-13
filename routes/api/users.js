@@ -224,45 +224,73 @@ const storage = multer.diskStorage({
   },
 });
 
+const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
-}).single("avatar");
 
-router.patch("/avatars", upload, async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-
-  try {
-    const { _id } = req.user;
-    const avatarPath = path.join(__dirname, "../../", "tmp", req.file.filename);
-
-    const avatar = await jimp.read(avatarPath);
-    await avatar.resize(250, 250);
-    const publicDir = path.resolve(__dirname, "../../", "public", "avatars");
-
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
+  fileFilter: (req, file, cb) => {
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error("Only image files are allowed"));
     }
 
-    const avatarFilename = `${_id}-${req.file.filename}`;
-    const avatarSavePath = path.join(publicDir, avatarFilename);
+    cb(null, true);
+  },
+}).single("avatar");
 
-    await avatar.write(avatarSavePath);
+router.patch(
+  "/avatars",
+  (req, res, next) => {
+    upload(req, res, function (err) {
+      if (err) {
+        return res.status(400).json({
+          message: err.message,
+        });
+      }
 
-    const avatarURL = `/avatars/${avatarFilename}`;
-    await User.findByIdAndUpdate(_id, { avatarURL });
-
-    fs.unlinkSync(avatarPath);
-
-    res.status(200).json({
-      avatarURL,
+      next();
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+  },
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    let avatarPath;
+
+    try {
+      const { _id } = req.user;
+      avatarPath = path.join(__dirname, "../../", "tmp", req.file.filename);
+
+      const avatar = await jimp.read(avatarPath);
+      await avatar.resize(250, 250);
+      const publicDir = path.resolve(__dirname, "../../", "public", "avatars");
+
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true });
+      }
+
+      const avatarFilename = `${_id}-${req.file.filename}`;
+      const avatarSavePath = path.join(publicDir, avatarFilename);
+
+      await avatar.write(avatarSavePath);
+
+      const avatarURL = `/avatars/${avatarFilename}`;
+      await User.findByIdAndUpdate(_id, { avatarURL });
+
+      res.status(200).json({
+        avatarURL,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+    } finally {
+      if (avatarPath && fs.existsSync(avatarPath)) {
+        fs.unlinkSync(avatarPath);
+      }
+    }
+  },
+);
 
 module.exports = router;

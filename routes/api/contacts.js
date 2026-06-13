@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const {
   listContacts,
   getContactById,
@@ -36,12 +37,22 @@ router.get("/", async (req, res, next) => {
 });
 
 router.get("/:id", async (req, res, next) => {
-  const { id } = req.params;
-  const contact = await getContactById(id, req.user._id);
-  if (!contact) {
-    return res.status(404).json({ message: "not found" });
-  } else {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid contact id" });
+    }
+
+    const contact = await getContactById(id, req.user._id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "not found" });
+    }
+
     res.status(200).json(contact);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -67,6 +78,10 @@ router.post("/", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid contact id" });
+    }
+
     const deleteContact = await removeContact(req.params.id, req.user._id);
     if (deleteContact) {
       res.status(200).json({ message: "contact deleted" });
@@ -80,6 +95,10 @@ router.delete("/:id", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid contact id" });
+    }
+
     const { error } = contactSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
@@ -102,16 +121,18 @@ router.put("/:id", async (req, res, next) => {
 router.patch("/:contactId/favorite", async (req, res, next) => {
   try {
     const { contactId } = req.params;
-    const { favorite } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({ message: "Invalid contact id" });
+    }
+
     const { error } = favoriteSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-    if (typeof favorite === "undefined") {
-      return res.status(400).json({ message: "missing field favorite" });
-    }
+    const { favorite } = req.body;
 
     const updatedContact = await updateStatusContact(
       contactId,

@@ -2,39 +2,23 @@ const mongoose = require("mongoose");
 const Contact = require("./contactsSchema.js");
 
 const listContacts = async (owner) => {
-  try {
-    return await Contact.find({ owner });
-  } catch (error) {
-    console.error(error.message);
-  }
+  return await Contact.find({ owner });
 };
 
 const getContactById = async (contactId, owner) => {
-  try {
-    return await Contact.findOne({ _id: contactId, owner });
-  } catch (error) {
-    console.error(error.message);
-  }
+  return await Contact.findOne({ _id: contactId, owner });
 };
 
 const removeContact = async (contactId, owner) => {
-  try {
-    return await Contact.findOneAndDelete({ _id: contactId, owner });
-  } catch (error) {
-    console.error(error.message);
-  }
+  return await Contact.findOneAndDelete({ _id: contactId, owner });
 };
 
 const addContact = async (data) => {
-  try {
-    return await Contact.create(data);
-  } catch (error) {
-    console.error(error.message);
-  }
+  return await Contact.create(data);
 };
 
-const updateContact = async (contactId, data, favorite, owner) => {
-  return await Contact.findByIdAndUpdate({ _id: contactId, owner }, data, {
+const updateContact = async (contactId, data, owner) => {
+  return await Contact.findOneAndUpdate({ _id: contactId, owner }, data, {
     new: true,
     runValidators: true,
   });
